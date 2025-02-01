@@ -24,6 +24,30 @@ Token *create_token(TokenType type, char* value) {
     return token;
 }
 
+void handle_value(char **buffer, size_t *buffer_size, FILE *stream, char first, int (*is_valid)(int)) {
+    (*buffer)[0] = first;
+    size_t index = 1;
+
+    int ch;
+    while ((ch = fgetc(stream)) != EOF) {
+        if (!is_valid(ch)) {
+            break;
+        }
+
+        if (index >= *buffer_size - 1) {
+            *buffer_size += 50;
+            *buffer = realloc(*buffer, *buffer_size);
+            if (!*buffer) {
+                perror("Failed to reallocate memory");
+                exit(1);
+            }
+        }
+
+        (*buffer)[index++] = ch;
+    }
+    (*buffer)[index] = '\0';
+}
+
 void handle_number(char **buffer, size_t *buffer_size, FILE *stream, char first) {
     (*buffer)[0] = first;
     size_t index = 1;
@@ -89,13 +113,13 @@ Token *next_token(Lexer *lexer) {
         }
         
         if (isdigit(ch)) {
-            handle_number(&value, &buffer_size, lexer->source, ch);
+            handle_value(&value, &buffer_size, lexer->source, ch, isdigit);
             type = Literal;
             break;
         }
 
         if (isalpha(ch)) {
-            handle_alphabetic(&value, &buffer_size, lexer->source, ch);
+            handle_value(&value, &buffer_size, lexer->source, ch, isalnum);
             type = Identifier;
             break;
         }
