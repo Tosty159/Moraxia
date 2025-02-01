@@ -48,54 +48,6 @@ void handle_value(char **buffer, size_t *buffer_size, FILE *stream, char first, 
     (*buffer)[index] = '\0';
 }
 
-void handle_number(char **buffer, size_t *buffer_size, FILE *stream, char first) {
-    (*buffer)[0] = first;
-    size_t index = 1;
-
-    int ch;
-    while ((ch = fgetc(stream)) != EOF) {
-        if (!isdigit(ch)) {
-            break;
-        }
-
-        if (index >= *buffer_size - 1) {
-            *buffer_size += 50;
-            *buffer = realloc(*buffer, *buffer_size);
-            if (!*buffer) {
-                perror("Failed to reallocate memory");
-                exit(1);
-            }
-        }
-
-        (*buffer)[index++] = ch;
-    }
-    (*buffer)[index] = '\0';
-}
-
-void handle_alphabetic(char **buffer, size_t *buffer_size, FILE *stream, char first) {
-    (*buffer)[0] = first;
-
-    int ch = 0;
-    int index = 1;
-    while ((ch = fgetc(stream)) != EOF) {
-        if (!isalnum(ch)) {
-            break;
-        }
-
-        if (index >= *buffer_size - 1) {
-            *buffer_size += 50;
-            *buffer = realloc(*buffer, *buffer_size);
-            if (!*buffer) {
-                perror("Failed to reallocate memory");
-                exit(1);
-            }
-        }
-
-        (*buffer)[index++] = ch;
-    }
-    (*buffer)[index] = '\0';
-}
-
 Token *next_token(Lexer *lexer) {
     size_t buffer_size = INITIAL_BUFFER_SIZE;
     char *value = malloc(buffer_size);
