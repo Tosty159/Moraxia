@@ -89,6 +89,10 @@ Token *next_token(Lexer *lexer) {
         value[0] = ch;
         value[1] = '\0';
         type = Operator;
+    } else if (ch == ';') {
+        value[0] = ch;
+        value[1] = '\0';
+        type = Semicolon;
     } else {
         fprintf(stderr, "Unexpected character %c\n", ch);
         free(value);
