@@ -71,32 +71,31 @@ Token *next_token(Lexer *lexer) {
 
     handle_whitespace(lexer->source);
 
-    if ((ch = fgetc(lexer->source)) != EOF) {
-        if (isdigit(ch)) {
-            handle_value(&value, &buffer_size, lexer->source, ch, isdigit);
-            type = Literal;
-        } else if (isalpha(ch)) {
-            handle_value(&value, &buffer_size, lexer->source, ch, isalnum);
-            type = Identifier;
-        } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '=') {
-            value[0] = ch;
-            value[1] = '\0';
-            type = Operator;
-        } else {
-            fprintf(stderr, "Unexpected character %c", ch);
-            free(value);
-            exit(1);
-        }
-    } else {
+    if ((ch = fgetc(lexer->source)) == EOF) {
         value[0] = '\0';
         type = END;
+        Token *token = create_token(type, value);
+        return token;
+    }
+
+    if (isdigit(ch)) {
+        handle_value(&value, &buffer_size, lexer->source, ch, isdigit);
+        type = Literal;
+    } else if (isalpha(ch)) {
+        handle_value(&value, &buffer_size, lexer->source, ch, isalnum);
+        type = Identifier;
+    } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '=') {
+        value[0] = ch;
+        value[1] = '\0';
+        type = Operator;
+    } else {
+        fprintf(stderr, "Unexpected character %c", ch);
+        free(value);
+        exit(1);
     }
 
     lexer->position = ftell(lexer->source);
 
     Token *token = create_token(type, value);
-
-    free(value);
-
     return token;
 }
