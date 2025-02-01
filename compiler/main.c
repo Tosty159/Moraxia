@@ -14,4 +14,6 @@ int main(int argc, char *argv[]) {
     }
     lexer->source = file;
     lexer->position = 0;
+
+    return 0;
 }
