@@ -89,7 +89,7 @@ Token *next_token(Lexer *lexer) {
         value[1] = '\0';
         type = Operator;
     } else {
-        fprintf(stderr, "Unexpected character %c", ch);
+        fprintf(stderr, "Unexpected character %c\n", ch);
         free(value);
         exit(1);
     }

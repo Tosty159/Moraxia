@@ -1,0 +1,30 @@
+# Ignore the build directory
+/build/
+
+# Ignore CMake cache and other generated files
+/CMakeCache.txt
+/CMakeFiles/
+
+# Ignore generated executables
+/lexer_program
+
+# Ignore object files
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Ignore IDE files (e.g., for VSCode, CLion, etc.)
+.vscode/
+.idea/
+
+# Ignore system-specific files (e.g., macOS, Windows)
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.swp
