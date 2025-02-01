@@ -19,4 +19,4 @@ typedef struct {
     long position;
 } Lexer;
 
-Token next_token(Lexer *lexer);
+Token *next_token(Lexer *lexer);
