@@ -37,7 +37,7 @@ void handle_value(char **buffer, size_t *buffer_size, FILE *stream, char first, 
         if (index >= *buffer_size - 1) {
             *buffer_size += 50;
             *buffer = realloc(*buffer, *buffer_size);
-            if (!*buffer) {
+            if (*buffer == NULL) {
                 perror("Failed to reallocate memory");
                 exit(1);
             }
@@ -46,6 +46,16 @@ void handle_value(char **buffer, size_t *buffer_size, FILE *stream, char first, 
         (*buffer)[index++] = ch;
     }
     (*buffer)[index] = '\0';
+}
+
+void handle_whitespace(FILE *stream) {
+    int ch;
+    while ((ch = fgetc(stream)) != EOF) {
+        if (!isspace(ch)) {
+            ungetc(ch, stream);
+            break;
+        }
+    }
 }
 
 Token *next_token(Lexer *lexer) {
@@ -59,33 +69,27 @@ Token *next_token(Lexer *lexer) {
     TokenType type;
     int ch;
 
-    while ((ch = fgetc(lexer->source)) != EOF) {
-        if (isspace(ch)) {
-            continue;
-        }
-        
+    handle_whitespace(lexer->source);
+
+    if ((ch = fgetc(lexer->source)) != EOF) {
         if (isdigit(ch)) {
             handle_value(&value, &buffer_size, lexer->source, ch, isdigit);
             type = Literal;
-            break;
-        }
-
-        if (isalpha(ch)) {
+        } else if (isalpha(ch)) {
             handle_value(&value, &buffer_size, lexer->source, ch, isalnum);
             type = Identifier;
-            break;
-        }
-
-        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '=') {
+        } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '=') {
             value[0] = ch;
             value[1] = '\0';
             type = Operator;
-            break;
+        } else {
+            fprintf(stderr, "Unexpected character %c", ch);
+            free(value);
+            exit(1);
         }
-
-        fprintf(stderr, "Unexpected character %c", ch);
-        free(value);
-        exit(1);
+    } else {
+        value[0] = '\0';
+        type = END;
     }
 
     lexer->position = ftell(lexer->source);
