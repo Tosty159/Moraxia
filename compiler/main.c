@@ -3,14 +3,17 @@
 #include "lexer.h"
 
 int main(int argc, char *argv[]) {
-    char path[] = "../src/main.mx";
+    if (argc != 2) {
+        printf("Usage: %s <Moraxia source code>", argv[0]);
+        return 1;
+    }
 
-    FILE *file = fopen(path, "r");
+    FILE *file = fopen(argv[1], "r");
 
     Lexer *lexer = (Lexer *)malloc(sizeof(Lexer));
     if (!lexer) {
         perror("Failed to allocate memory for lexer");
-        exit(1);
+        return 1;
     }
     lexer->source = file;
     lexer->position = 0;
