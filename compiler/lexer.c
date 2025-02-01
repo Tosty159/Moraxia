@@ -31,6 +31,7 @@ void handle_value(char **buffer, size_t *buffer_size, FILE *stream, char first, 
     int ch;
     while ((ch = fgetc(stream)) != EOF) {
         if (!is_valid(ch)) {
+            ungetc(ch, stream);
             break;
         }
 
