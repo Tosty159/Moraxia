@@ -68,7 +68,7 @@ int is_operator(char ch) {
 int is_punctuation(char ch) {
     char punct[] = ",()[].";
 
-    return strchr(ops, ch) != NULL;
+    return strchr(punct, ch) != NULL;
 }
 
 Token *next_token(Lexer *lexer) {
