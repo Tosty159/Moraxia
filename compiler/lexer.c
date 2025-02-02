@@ -59,6 +59,12 @@ void handle_whitespace(FILE *stream) {
     }
 }
 
+int is_operator(char ch) {
+    char ops[] = "+-*/=";
+
+    return strchr(ops, ch) != NULL;
+}
+
 Token *next_token(Lexer *lexer) {
     size_t buffer_size = INITIAL_BUFFER_SIZE;
     char *value = malloc(buffer_size);
@@ -85,7 +91,7 @@ Token *next_token(Lexer *lexer) {
     } else if (isalpha(ch)) {
         handle_value(&value, &buffer_size, lexer->source, ch, isalnum);
         type = Identifier;
-    } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '=') {
+    } else if (is_operator(ch)) {
         value[0] = ch;
         value[1] = '\0';
         type = Operator;
