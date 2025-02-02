@@ -5,6 +5,7 @@ typedef enum {
     Identifier,
     Keyword,
     Operator,
+    Punctuation,
     Semicolon,
     END,
 } TokenType;

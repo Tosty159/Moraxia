@@ -65,6 +65,12 @@ int is_operator(char ch) {
     return strchr(ops, ch) != NULL;
 }
 
+int is_punctuation(char ch) {
+    char punct[] = ",()[].";
+
+    return strchr(ops, ch) != NULL;
+}
+
 Token *next_token(Lexer *lexer) {
     size_t buffer_size = INITIAL_BUFFER_SIZE;
     char *value = malloc(buffer_size);
@@ -95,6 +101,10 @@ Token *next_token(Lexer *lexer) {
         value[0] = ch;
         value[1] = '\0';
         type = Operator;
+    } else if (is_punctuation(ch)) {
+        value[0] = ch;
+        value[1] = '\0';
+        type = Punctuation;
     } else if (ch == ';') {
         value[0] = ch;
         value[1] = '\0';
