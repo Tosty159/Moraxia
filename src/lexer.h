@@ -1,5 +1,6 @@
 typedef enum {
     TOKEN_INTEGER,
+    TOKEN_FLOAT,
     TOKEN_STRING,
     TOKEN_IDENTIFIER,
     TOKEN_KEYWORD,
