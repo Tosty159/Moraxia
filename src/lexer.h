@@ -15,7 +15,6 @@ typedef struct {
 
 typedef struct {
     FILE *source;
-    char current_char;
 } Lexer;
 
 Lexer *create_lexer(FILE *stream);
