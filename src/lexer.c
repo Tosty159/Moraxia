@@ -83,6 +83,114 @@ int is_keyword(char *s) {
     return 0;
 }
 
+int is_symbol(char ch) {
+    char symbols[23] = "+-*/\%^>=<!~&|,.:()[]{}";
+
+    return strchr(symbols, ch) != NULL;
+}
+
+TokenType handle_symbol(char **buffer, size_t *buffer_size, FILE *stream, char first) {
+    TokenType type;
+
+    (*buffer)[0] = first;
+    size_t idx = 1;
+
+    switch (first) {
+        case '+': case '-': case '*': case '/':
+        case '=': case '>': case '!':
+            // Operators that can be followed by a '='
+            type = TOKEN_OPERATOR;
+
+            int c;
+            if ((c = fgetc(stream)) != EOF) {
+                if (c == '=') {
+                    (*buffer)[idx++] = c;
+                } else {
+                    ungetc(c, stream);
+                }
+            }
+            break;
+        case '&': case '|':
+            // Operators that come in two, e.g. '&&'
+            type = TOKEN_OPERATOR;
+
+            int c;
+            if ((c = fgetc(stream)) != EOF) {
+                if (c == first) {
+                    (*buffer)[idx++] = c;
+                } else {
+                    type = TOKEN_INVALID;
+
+                    char error_message[50];
+                    snprintf(error_message, sizeof(error_message), "Invalid operator: %c", first);
+                    (*buffer) = strdup(error_message);
+                }
+            }
+            break;
+        case '^':
+            // Can come in one or two, e.g. '^'(exponent) or '^^'(XOR)
+            type = TOKEN_OPERATOR;
+
+            int c;
+            if ((c = fgetc(stream)) != EOF) {
+                if (c == first) {
+                    (*buffer)[idx++] = c;
+                } else {
+                    ungetc(c, stream);
+                }
+            }
+            break;
+        case '~':
+            // Operators that only come alone
+            type = TOKEN_OPERATOR;
+            break;
+        case ',': case '.': case ':': case '(': case ')':
+        case '[': case '{': case '}':
+            // Punctuation
+            type = TOKEN_PUNCTUATION;
+            break;
+        case ']':
+            // Punctuation that can have more than one character
+            type = TOKEN_PUNCTUATION;
+
+            int c;
+            if ((c = fgetc(stream)) != EOF) {
+                if (c == '>') {
+                    (*buffer)[idx++] = c;
+                } else {
+                    ungetc(c, stream);
+                }
+            }
+            break;
+        case '<':
+            // Can be a punctuation or an operator
+            int c;
+            if ((c = fgetc(stream)) != EOF) {
+                if (c == '=') {
+                    // Is an operator
+                    (*buffer)[idx++] = c;
+
+                    type = TOKEN_OPERATOR;
+                } else if (c == '[') {
+                    // Is punctuation
+                    (*buffer)[idx++] = c;
+
+                    type = TOKEN_PUNCTUATION;
+                } else {
+                    ungetc(c, stream);
+                }
+            }
+            break;
+        default:
+            // This won't be reached if the check for 'is_symbol()' is ran first
+            type = TOKEN_INVALID;
+            break;
+    }
+
+    (*buffer)[idx] = '\0';
+    return type;
+}
+
 Token *next_token(Lexer *lexer) {
     Token *token = (Token *)malloc(sizeof(Token));
     if (!token) {
@@ -120,6 +228,12 @@ Token *next_token(Lexer *lexer) {
             } else {
                 token->type = TOKEN_IDENTIFIER;
             }
+            token->value = strdup(value);
+            break;
+        }
+
+        if (is_symbol(ch)) {
+            token->type = handle_symbol(&value, &buffer_size, lexer->source, ch);
             token->value = strdup(value);
             break;
         }
