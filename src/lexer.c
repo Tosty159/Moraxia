@@ -121,7 +121,7 @@ TokenType handle_symbol(char **buffer, size_t *buffer_size, FILE *stream, char f
                 } else {
                     type = TOKEN_INVALID;
 
-                    char error_message[50];
+                    char error_message[25];
                     snprintf(error_message, sizeof(error_message), "Invalid operator: %c", first);
                     (*buffer) = strdup(error_message);
                 }
@@ -237,5 +237,14 @@ Token *next_token(Lexer *lexer) {
             token->value = strdup(value);
             break;
         }
+
+        token->type = TOKEN_INVALID;
+
+        char error_message[25];
+        snprintf(error_message, sizeof(error_message), "Invalid character: %c", ch);
+        token->value = strdup(error_message);
     }
+
+    free(value);
+    return token;
 }
