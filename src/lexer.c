@@ -206,6 +206,17 @@ Token *next_token(Lexer *lexer) {
     }
 
     int ch;
+
+    if ((ch = fgetc(lexer->source)) == EOF) {
+        token->type = TOKEN_EOF;
+
+        value[0] = '\0';
+        token->value = strdup(value);
+        
+        free(value);
+        return token;
+    }
+
     while ((ch = fgetc(lexer->source)) != EOF) {
         if (isspace(ch)) {
             continue;
