@@ -191,6 +191,16 @@ TokenType handle_symbol(char **buffer, size_t *buffer_size, FILE *stream, char f
     return type;
 }
 
+void handle_space(FILE *stream) {
+    int ch;
+    while ((ch = fgetc(stream)) != EOF) {
+        if (!isspace(ch)) {
+            ungetc(ch, stream);
+            break;
+        }
+    }
+}
+
 Token *next_token(Lexer *lexer) {
     Token *token = (Token *)malloc(sizeof(Token));
     if (!token) {
@@ -205,14 +215,15 @@ Token *next_token(Lexer *lexer) {
         exit(1);
     }
 
-    int ch;
+    handle_space(lexer->source);
 
+    int ch;
     if ((ch = fgetc(lexer->source)) == EOF) {
         token->type = TOKEN_EOF;
 
         value[0] = '\0';
         token->value = strdup(value);
-        
+
         free(value);
         return token;
     }
