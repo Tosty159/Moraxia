@@ -235,9 +235,7 @@ Token *next_token(Lexer *lexer) {
             token->type = TOKEN_FLOAT;
         }
         token->value = strdup(value);
-    }
-
-    if (isalpha(ch) || ch == '_') {
+    } else if (isalpha(ch) || ch == '_') {
         handle_alphabetic(&value, &buffer_size, lexer->source, ch);
         if (is_keyword(value)) {
             token->type = TOKEN_KEYWORD;
@@ -245,18 +243,16 @@ Token *next_token(Lexer *lexer) {
             token->type = TOKEN_IDENTIFIER;
         }
         token->value = strdup(value);
-    }
-
-    if (is_symbol(ch)) {
+    } else if (is_symbol(ch)) {
         token->type = handle_symbol(&value, &buffer_size, lexer->source, ch);
         token->value = strdup(value);
+    } else {
+        token->type = TOKEN_INVALID;
+
+        char error_message[25];
+        snprintf(error_message, sizeof(error_message), "Invalid character: %c", ch);
+        token->value = strdup(error_message);
     }
-
-    token->type = TOKEN_INVALID;
-
-    char error_message[25];
-    snprintf(error_message, sizeof(error_message), "Invalid character: %c", ch);
-    token->value = strdup(error_message);
 
     free(value);
     return token;
