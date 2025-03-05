@@ -1,2 +1,4 @@
 (library
- (name frontend))
+ (name frontend)
+ (public_name frontend)
+ (libraries lexeparser))
