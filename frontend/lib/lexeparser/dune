@@ -1,0 +1,4 @@
+(library
+ (name lexeparser)
+ (public_name frontend.lexeparser)
+ (modules token lexer node parser))
