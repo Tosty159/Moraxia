@@ -1,0 +1,46 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Zig
+        run: |
+          curl -sSL https://ziglang.org/download/index.json | jq -r '.[0].url' | xargs curl -L -o zig.tar.xz
+          tar -xf zig.tar.xz
+
+      - name: Build morx for ${{ matrix.os }}
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            ./zig build-exe src/main.zig --target x86_64-linux --release-fast
+            mv main ./morx-linux
+            tar -czf morx-linux.tar.gz morx-linux
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            ./zig build-exe src/main.zig --target x86_64-macos --release-fast
+            mv main ./morx-macos
+            tar -czf morx-macos.tar.gz morx-macos
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            ./zig build-exe src/main.zig --target x86_64-windows --release-fast
+            mv main.exe ./morx.exe
+            zip morx-windows.zip morx.exe
+          fi
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            morx-linux.tar.gz
+            morx-macos.tar.gz
+            morx-windows.zip
