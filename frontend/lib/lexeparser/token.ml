@@ -9,3 +9,16 @@ type token =
   | Identifier of string
   | Punctuation of string
   | EOF
+
+let show_token token =
+  match token with
+  | Int i -> Printf.sprintf "Int(%d)" i
+  | Float f -> Printf.sprintf "Float(%f)" f
+  | Char ch -> Printf.sprintf "Char(%c)" ch
+  | String s -> Printf.sprintf "String(%s)" s
+  | Bool b -> Printf.sprintf "Bool(%s)" (string_of_bool b)
+  | Operator op -> Printf.sprintf "Operator(%s)" op
+  | Keyword kw -> Printf.sprintf "Keyword(%s)" kw
+  | Identifier id -> Printf.sprintf "Identifier(%s)" id
+  | Punctuation punct -> Printf.sprintf "Punctuation(%s)" punct
+  | EOF -> "EOF"
