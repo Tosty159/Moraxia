@@ -55,7 +55,111 @@ let handle_alphabetic lex first =
     None
 
 let handle_symbol lex first =
-  None
+  match first with
+  (* Operators: *)
+  | '~' ->
+    (* Single character operators *)
+    Some (Operator "~")
+  | ch when List.mem ch ['='] ->
+    (* Can be alone or duplicated *)
+    let op = ref (String.make 1 ch) in
+    let c = read lex in
+    if c = ch then
+      op := !op ^ !op
+    else
+      unget lex c;
+    
+    Some (Operator !op)
+  | '.' ->
+    (* Can be alone, duplicated, or tripled *)
+    let op = ref "." in
+    let c = read lex in
+    if c = '.' then begin
+        op := "..";
+        let c2 = read lex in
+        if c2 = '.' then
+          op := "..."
+        else
+          unget lex c2;
+      end
+    else
+      unget lex c;
+
+    Some (Operator !op)
+  | ch when List.mem ch ['>';'!'] ->
+    (* Can be alone or followed by '=' *)
+    let op = ref (String.make 1 ch) in
+    let c = read lex in
+    if c = '=' then
+      op := !op ^ "="
+    else
+      unget lex c;
+
+    Some (Operator !op)
+  | ch when List.mem ch ['+';'-'] ->
+    (* Can be duplicated or followed by '=' *)
+    let op = ref (String.make 1 ch) in
+    let c = read lex in
+    if c = ch then
+      op := !op ^ !op
+    else if c = '=' then
+      op := !op ^ "="
+    else
+      unget lex c;
+    
+    Some (Operator !op)
+  | ch when List.mem ch ['*';'/'] ->
+    (* Can be duplicated, followed by '=', or duplicated + followed by '=' *)
+    let op = ref (String.make 1 ch) in
+    let c = read lex in
+    if c = ch then begin
+        op := !op ^ !op;
+        let c2 = read lex in
+        if c2 = '=' then
+          op := !op ^ "="
+        else
+          unget lex c2;
+      end
+    else if c = '=' then
+      op := !op ^ "="
+    else
+      unget lex c;
+
+    Some (Operator !op)
+  | ':' ->
+    (* Can only exist followed by '=' *)
+    let c = read lex in
+    if c = '=' then
+      Some (Operator ":=")
+    else
+      let message = Printf.sprintf "Invalid syntax: ':%c'" c in
+      failwith message
+  (* Punctuation *)
+  | ch when List.mem ch [','] ->
+    (* Single character punctuation *)
+    Some (Punctuation ",")
+  | ']' ->
+    (* Multi-character punctuation *)
+    (* Since only one case so far, no need for extensive checks*)
+    let punct = ref "]" in
+    let c = read lex in
+    if c = '>' then
+      punct := "]>"
+    else
+      unget lex c;
+    
+    Some (Punctuation !punct)
+  (* Operators that can be punctuation *)
+  | '<' ->
+    (* There's only one case so far *)
+    let c = read lex in
+    if c = '[' then
+      Some (Punctuation "<[")
+    else begin
+      unget lex c;
+      Some (Operator "<")
+    end
+  | _ -> None
 
 let next_token lex =
   if lex.is_over then
