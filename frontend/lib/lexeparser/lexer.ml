@@ -20,3 +20,30 @@ let read lex =
 
 let unget lex ch =
   lex.unget_stack <- ch :: lex.unget_stack
+
+let handle_number lex first =
+  None
+
+let handle_alphabetic lex first =
+  None
+
+let handle_symbol lex first =
+  None
+
+let next_token lex =
+  if lex.is_over then
+    EOF
+  else begin
+    let ch = read lex in
+    match handle_number lex ch with
+    | Some num -> num
+    | None ->
+      match handle_alphabetic lex ch with
+      | Some alpha -> alpha
+      | None ->
+        match handle_symbol lex ch with
+        | Some sym -> sym
+        | None ->
+          let message = Printf.sprintf "Invalid character: %c" ch in
+          failwith message
+  end
