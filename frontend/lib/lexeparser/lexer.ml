@@ -21,6 +21,12 @@ let read lex =
 let unget lex ch =
   lex.unget_stack <- ch :: lex.unget_stack
 
+let is_digit ch =
+  '0' <= ch && ch <= '9'
+
+let is_alpha ch =
+  'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch = '_'
+
 let handle_number lex first =
   None
 
