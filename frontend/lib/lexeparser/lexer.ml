@@ -27,6 +27,9 @@ let is_digit ch =
 let is_alpha ch =
   'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch = '_'
 
+let is_alnum ch =
+  is_alpha ch || is_digit ch
+
 let handle_number lex first =
   if is_digit first then
     let rec read_number lex number =
@@ -43,7 +46,7 @@ let handle_alphabetic lex first =
   if is_alpha first then
     let rec read_alpha lex name =
       match read lex with
-      | ch when is_alpha ch -> read_alpha lex (name ^ (String.make 1 ch))
+      | ch when is_alnum ch -> read_alpha lex (name ^ (String.make 1 ch))
       | ch -> unget lex ch; name
     in
     let name = read_alpha lex (String.make 1 first) in
