@@ -54,13 +54,17 @@ let handle_alphabetic lex first =
   else
     None
 
+let read_optional lex expected =
+  let c = read lex in
+  if c = expected then true else (unget lex c; false)
+
 let handle_symbol lex first =
   match first with
   (* Operators: *)
   | '~' ->
     (* Single character operators *)
     Some (Operator "~")
-  | ch when List.mem ch ['='] ->
+  | ('=' | '&' | '|') as ch ->
     (* Can be alone or duplicated *)
     let op = ref (String.make 1 ch) in
     let c = read lex in
@@ -70,93 +74,82 @@ let handle_symbol lex first =
       unget lex c;
     
     Some (Operator !op)
-  | '.' ->
+  | '.' as ch ->
     (* Can be alone, duplicated, or tripled *)
-    let op = ref "." in
-    let c = read lex in
-    if c = '.' then begin
-        op := "..";
-        let c2 = read lex in
-        if c2 = '.' then
-          op := "..."
-        else
-          unget lex c2;
-      end
-    else
-      unget lex c;
+    (* Single case *)
+    let op = String.make 1 ch in
 
-    Some (Operator !op)
-  | ch when List.mem ch ['>';'!'] ->
+    let op = if read_optional lex ch then op ^ op else op in
+    let op = if read_optional lex ch then op ^ op else op in
+
+    Some (Operator op)
+  | ('>' | '!' | '%') as ch ->
     (* Can be alone or followed by '=' *)
-    let op = ref (String.make 1 ch) in
-    let c = read lex in
-    if c = '=' then
-      op := !op ^ "="
-    else
-      unget lex c;
+    let op = String.make 1 ch in
 
-    Some (Operator !op)
-  | ch when List.mem ch ['+';'-'] ->
-    (* Can be duplicated or followed by '=' *)
-    let op = ref (String.make 1 ch) in
-    let c = read lex in
-    if c = ch then
-      op := !op ^ !op
-    else if c = '=' then
-      op := !op ^ "="
+    let op = if read_optional lex '=' then op ^ "=" else op in
+
+    Some (Operator op)
+  | ('+' | '-' | '^') as ch ->
+    (* Can be alone duplicated or followed by '=' *)
+    let op = String.make 1 ch in
+
+    let op = if read_optional lex ch then
+      op ^ op
+    else if read_optional lex '=' then
+      op ^ "="
     else
-      unget lex c;
+      op
+    in
     
-    Some (Operator !op)
-  | ch when List.mem ch ['*';'/'] ->
+    Some (Operator op)
+  | ('*' | '/') as ch ->
     (* Can be duplicated, followed by '=', or duplicated + followed by '=' *)
-    let op = ref (String.make 1 ch) in
-    let c = read lex in
-    if c = ch then begin
-        op := !op ^ !op;
-        let c2 = read lex in
-        if c2 = '=' then
-          op := !op ^ "="
-        else
-          unget lex c2;
-      end
-    else if c = '=' then
-      op := !op ^ "="
-    else
-      unget lex c;
+    let op = String.make 1 ch in
 
-    Some (Operator !op)
+    let op = if read_optional lex ch then begin
+        let temp = op ^ op in
+        if read_optional lex '=' then
+          temp ^ "="
+        else
+          temp
+      end
+    else if read_optional lex '=' then
+      op ^ "="
+    else
+      op
+    in
+
+    Some (Operator op)
   | ':' ->
     (* Can only exist followed by '=' *)
-    let c = read lex in
-    if c = '=' then
+    if read_optional lex '=' then
       Some (Operator ":=")
     else
-      let message = Printf.sprintf "Invalid syntax: ':%c'" c in
+      let message = Printf.sprintf "Invalid syntax: ':%c'" (read lex) in
       failwith message
   (* Punctuation *)
-  | ch when List.mem ch [','] ->
+  | ',' ->
     (* Single character punctuation *)
     Some (Punctuation ",")
   | ']' ->
     (* Multi-character punctuation *)
     (* Since only one case so far, no need for extensive checks*)
-    let punct = ref "]" in
-    let c = read lex in
-    if c = '>' then
-      punct := "]>"
+    let punct = "]" in
+
+    let punct = if  read_optional lex '>' then
+      "]>"
     else
-      unget lex c;
+      punct
+    in
     
-    Some (Punctuation !punct)
+    Some (Punctuation punct)
   (* Operators that can be punctuation *)
   | '<' ->
     (* There's only one case so far *)
-    let c = read lex in
-    if c = '[' then
+    if read_optional lex '[' then
       Some (Punctuation "<[")
     else begin
-      unget lex c;
       Some (Operator "<")
     end
   | _ -> None
