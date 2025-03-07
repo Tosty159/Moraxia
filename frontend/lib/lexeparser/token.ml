@@ -8,6 +8,7 @@ type token =
   | Keyword of string
   | Identifier of string
   | Punctuation of string
+  | Semicolon
   | EOF
 
 let show_token token =
@@ -21,4 +22,5 @@ let show_token token =
   | Keyword kw -> Printf.sprintf "Keyword(%s)" kw
   | Identifier id -> Printf.sprintf "Identifier(%s)" id
   | Punctuation punct -> Printf.sprintf "Punctuation(%s)" punct
+  | Semicolon -> "Semicolon"
   | EOF -> "EOF"

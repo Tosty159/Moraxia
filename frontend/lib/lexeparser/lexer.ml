@@ -152,6 +152,8 @@ let handle_symbol lex first =
     else begin
       Some (Operator "<")
     end
+  (* Semicolon *)
+  | ';' -> Some (Semicolon)
   | _ -> None
 
 let next_token lex =
