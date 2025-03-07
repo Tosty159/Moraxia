@@ -28,10 +28,28 @@ let is_alpha ch =
   'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch = '_'
 
 let handle_number lex first =
-  None
+  if is_digit first then
+    let rec read_number lex number =
+      match read lex with
+      | ch when is_digit ch -> read_number lex (number ^ (String.make 1 ch))
+      | ch -> unget lex ch; number
+    in
+    let num = read_number lex (String.make 1 first) in
+    Some (Int (int_of_string num))
+  else
+    None
 
 let handle_alphabetic lex first =
-  None
+  if is_alpha first then
+    let rec read_alpha lex name =
+      match read lex with
+      | ch when is_alpha ch -> read_alpha lex (name ^ (String.make 1 ch))
+      | ch -> unget lex ch; name
+    in
+    let name = read_alpha lex (String.make 1 first) in
+    Some (Identifier name)
+  else
+    None
 
 let handle_symbol lex first =
   None
