@@ -129,9 +129,9 @@ let handle_symbol lex first =
       let message = Printf.sprintf "Invalid syntax: ':%c'" (read lex) in
       failwith message
   (* Punctuation *)
-  | ',' ->
+  | ',' as ch ->
     (* Single character punctuation *)
-    Some (Punctuation ",")
+    Some (Punctuation (String.make 1 ch))
   | ']' ->
     (* Multi-character punctuation *)
     (* Since only one case so far, no need for extensive checks*)
