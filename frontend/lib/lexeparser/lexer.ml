@@ -128,30 +128,25 @@ let handle_symbol lex first =
     else
       let message = Printf.sprintf "Invalid syntax: ':%c'" (read lex) in
       failwith message
+  | ('[' | '(' | ')' | '{' | '}') as ch ->
+    (* Collective operators *)
+    Some (Operator (String.make 1 ch))
   (* Punctuation *)
   | ',' as ch ->
     (* Single character punctuation *)
     Some (Punctuation (String.make 1 ch))
-  | ']' ->
-    (* Multi-character punctuation *)
-    (* Since only one case so far, no need for extensive checks*)
-    let punct = "]" in
-
-    let punct = if  read_optional lex '>' then
-      "]>"
-    else
-      punct
-    in
-    
-    Some (Punctuation punct)
-  (* Operators that can be punctuation *)
+  (* Operator or punctuation *)
   | '<' ->
-    (* There's only one case so far *)
     if read_optional lex '[' then
       Some (Punctuation "<[")
     else begin
       Some (Operator "<")
     end
+  | ']' ->
+    if read_optional lex '>' then
+      Some (Punctuation "]>")
+    else
+      Some (Operator "]")
   (* Semicolon *)
   | ';' -> Some (Semicolon)
   | _ -> None
