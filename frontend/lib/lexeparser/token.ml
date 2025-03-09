@@ -4,7 +4,6 @@ type token =
   | Char of char
   | String of string
   | Bool of bool
-  | Operator of string
   | AssignmentOp of string
   | TypingOp of string
   | MemoryOp of string
@@ -27,7 +26,6 @@ let show_token token =
   | Char ch -> Printf.sprintf "Char(%c)" ch
   | String s -> Printf.sprintf "String(%s)" s
   | Bool b -> Printf.sprintf "Bool(%s)" (string_of_bool b)
-  | Operator op -> Printf.sprintf "Operator(%s)" op
   | AssignmentOp op -> Printf.sprintf "AssignmentOp(%s)" op
   | TypingOp op -> Printf.sprintf "TypingOp(%s)" op
   | MemoryOp op -> Printf.sprintf "MemoryOp(%s)" op
