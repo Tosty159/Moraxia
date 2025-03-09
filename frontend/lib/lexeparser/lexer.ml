@@ -61,92 +61,99 @@ let read_optional lex expected =
 let handle_symbol lex first =
   match first with
   (* Operators: *)
-  | '~' ->
-    (* Single character operators *)
-    Some (Operator "~")
-  | ('=' | '&' | '|') as ch ->
-    (* Can be alone or duplicated *)
-    let op = ref (String.make 1 ch) in
-    let c = read lex in
-    if c = ch then
-      op := !op ^ !op
+  (* Assignment *)
+  | '=' -> (* Could be Comparison *)
+    let op = "=" in
+
+    if read_optional lex '=' then
+      Some (ComparisonOp (op ^ "="))
     else
-      unget lex c;
-    
-    Some (Operator !op)
-  | '.' as ch ->
-    (* Can be alone, duplicated, or tripled *)
-    (* Single case *)
+      Some (AssignmentOp op)
+  | ':' -> (* Could be Typing *)
+    let op = ":" in
+
+    if read_optional lex '=' then
+      Some (AssignmentOp (op ^ "="))
+    else
+      Some (TypingOp op)
+  (* Typing *)
+  | '-' -> (* Could be Arithmetic/Assignment *)
+    let op = "-" in
+
+    if read_optional lex '>' then
+      Some (TypingOp (op ^ ">"))
+    else if read_optional lex '=' then
+      Some (AssignmentOp (op ^ "="))
+    else
+      Some (ArithmeticOp op)
+  (* Arithmetic *)
+  | ('+' | '%') as ch -> (* Could be Assignment *)
     let op = String.make 1 ch in
 
-    let op = if read_optional lex ch then op ^ op else op in
-    let op = if read_optional lex ch then op ^ op else op in
+    if read_optional lex '=' then
+      Some (AssignmentOp (op ^ "="))
+    else
+      Some (ArithmeticOp op)
+  | ('*' | '/') as ch -> (* Could be duplicated and/or assigment *)
+    let op = String.make 1 ch in
 
-    Some (Operator op)
-  | ('>' | '!' | '%') as ch ->
-    (* Can be alone or followed by '=' *)
+    if read_optional lex '=' then
+      Some (AssignmentOp (op ^ "="))
+    else if read_optional lex ch then
+      let dup_op = op ^ op in
+      if read_optional lex '=' then
+        Some (AssignmentOp (dup_op ^ "="))
+      else
+        Some (ArithmeticOp dup_op)
+    else
+      Some (ArithmeticOp op)
+  (* BitLogic *)
+  | '!' -> (* Could be Comparison *)
+    let op = "!" in
+
+    if read_optional lex '=' then
+      Some (ComparisonOp (op ^ "="))
+    else
+      Some (BitLogicOp op)
+  | ('&' | '|' | '^') as ch -> (* Must be duplicated *)
+    let op = String.make 1 ch in
+
+    if read_optional lex ch then
+      Some (BitLogicOp (op ^ op))
+    else
+      let message = Printf.sprintf "Ivalid character: '%c'" ch in
+      failwith message
+  (* Comparison *)
+  | '<' -> (* Could be punctuation *)
+      if read_optional lex '[' then
+        Some (Punctuation "<[")
+      else
+        Some (ComparisonOp "<")
+  | '~' -> Some (ComparisonOp "~")
+  | '>' as ch -> (* Could be followed by '=' *)
     let op = String.make 1 ch in
 
     let op = if read_optional lex '=' then op ^ "=" else op in
 
-    Some (Operator op)
-  | ('+' | '-' | '^') as ch ->
-    (* Can be alone duplicated or followed by '=' *)
-    let op = String.make 1 ch in
+    Some (ComparisonOp op)
+  (* Collective *)
+  | ('(' | ')' | '[' | ']' | '{' | '}') as ch -> Some (CollectiveOp (String.make 1 ch))
+  (* Dot *)
+  | '.' ->
+    let op = "." in
 
-    let op = if read_optional lex ch then
-      op ^ op
-    else if read_optional lex '=' then
-      op ^ "="
+    let op = if read_optional lex '.' then
+      if read_optional lex '.' then
+        "..."
+      else
+        ".."
     else
       op
     in
     
-    Some (Operator op)
-  | ('*' | '/') as ch ->
-    (* Can be duplicated, followed by '=', or duplicated + followed by '=' *)
-    let op = String.make 1 ch in
-
-    let op = if read_optional lex ch then begin
-        let temp = op ^ op in
-        if read_optional lex '=' then
-          temp ^ "="
-        else
-          temp
-      end
-    else if read_optional lex '=' then
-      op ^ "="
-    else
-      op
-    in
-
-    Some (Operator op)
-  | ':' ->
-    (* Can only exist followed by '=' *)
-    if read_optional lex '=' then
-      Some (Operator ":=")
-    else
-      let message = Printf.sprintf "Invalid syntax: ':%c'" (read lex) in
-      failwith message
-  | ('[' | '(' | ')' | '{' | '}') as ch ->
-    (* Collective operators *)
-    Some (Operator (String.make 1 ch))
+    Some (DotOp op)
   (* Punctuation *)
-  | ',' as ch ->
-    (* Single character punctuation *)
-    Some (Punctuation (String.make 1 ch))
-  (* Operator or punctuation *)
-  | '<' ->
-    if read_optional lex '[' then
-      Some (Punctuation "<[")
-    else begin
-      Some (Operator "<")
-    end
-  | ']' ->
-    if read_optional lex '>' then
-      Some (Punctuation "]>")
-    else
-      Some (Operator "]")
+  | ',' as ch -> Some (Punctuation (String.make 1 ch))
   (* Semicolon *)
   | ';' -> Some (Semicolon)
   | _ -> None
