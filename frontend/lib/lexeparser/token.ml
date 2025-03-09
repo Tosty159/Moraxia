@@ -17,6 +17,7 @@ type token =
   | Punctuation of string
   | Semicolon
   | EOF
+  | Error of string
 
 let show_token token =
   match token with
@@ -38,3 +39,4 @@ let show_token token =
   | Punctuation punct -> Printf.sprintf "Punctuation(%s)" punct
   | Semicolon -> "Semicolon"
   | EOF -> "EOF"
+  | Error message -> Printf.sprintf "Error: %s" message
