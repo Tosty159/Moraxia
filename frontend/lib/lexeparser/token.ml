@@ -7,6 +7,7 @@ type token =
   | Operator of string
   | AssignmentOp of string
   | TypingOp of string
+  | MemoryOp of string
   | ArithmeticOp of string
   | BitLogicOp of string
   | ComparisonOp of string
@@ -29,6 +30,7 @@ let show_token token =
   | Operator op -> Printf.sprintf "Operator(%s)" op
   | AssignmentOp op -> Printf.sprintf "AssignmentOp(%s)" op
   | TypingOp op -> Printf.sprintf "TypingOp(%s)" op
+  | MemoryOp op -> Printf.sprintf "MemoryOp(%s)" op
   | ArithmeticOp op -> Printf.sprintf "ArithmeticOp(%s)" op
   | BitLogicOp op -> Printf.sprintf "LogicOp(%s)" op
   | ComparisonOp op -> Printf.sprintf "ComparisonOp(%s)" op
