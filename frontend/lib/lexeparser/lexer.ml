@@ -86,6 +86,13 @@ let handle_symbol lex first =
       Some (AssignmentOp (op ^ "="))
     else
       Some (ArithmeticOp op)
+  (* Memory *)
+  | '&' -> (* Can be BitLogic *)
+    if read_optional lex '&' then
+      Some (BitLogicOp "&&")
+    else
+      Some (MemoryOp "&")
+  | '@' -> Some (MemoryOp "@")
   (* Arithmetic *)
   | ('+' | '%') as ch -> (* Could be Assignment *)
     let op = String.make 1 ch in
@@ -115,7 +122,7 @@ let handle_symbol lex first =
       Some (ComparisonOp (op ^ "="))
     else
       Some (BitLogicOp op)
-  | ('&' | '|' | '^') as ch -> (* Must be duplicated *)
+  | ('|' | '^') as ch -> (* Must be duplicated *)
     let op = String.make 1 ch in
 
     if read_optional lex ch then
