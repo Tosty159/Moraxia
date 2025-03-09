@@ -165,10 +165,17 @@ let handle_symbol lex first =
   | ';' -> Some (Semicolon)
   | _ -> None
 
+let rec handle_whitespace lex =
+  let ch = read lex in
+  match ch with
+  | ' ' | '\t' | '\n' -> handle_whitespace lex
+  | _ -> unget lex ch; ()
+
 let next_token lex =
   if lex.is_over then
     EOF
   else begin
+    handle_whitespace lex;
     let ch = read lex in
     match handle_number lex ch with
     | Some num -> num
