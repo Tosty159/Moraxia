@@ -42,6 +42,11 @@ let is_alpha ch =
 let is_alnum ch =
   is_alpha ch || is_digit ch
 
+let is_keyword str =
+  match str with
+  | "let" | "fun" | "static" | "mut" -> true
+  | _ -> false
+
 let handle_number lex first =
   try
     if is_digit first then
@@ -73,7 +78,10 @@ let handle_alphabetic lex first =
         | ch -> unget lex ch; name
       in
       let name = read_alpha lex (String.make 1 first) in
-      Some (Identifier name)
+      if is_keyword name then
+        Some (Keyword name)
+      else
+        Some (Identifier name)
     else
       None
   with ReturnImmediate -> None
