@@ -15,6 +15,9 @@ let create_lexer stream =
     unget_stack = [];
   }
 
+let unget lex ch =
+  lex.unget_stack <- ch :: lex.unget_stack
+
 let read lex =
   match lex.unget_stack with
   | [] -> (
@@ -30,8 +33,10 @@ let read lex =
     )
   | hd :: tl -> lex.unget_stack <- tl; Some hd
 
-let unget lex ch =
-  lex.unget_stack <- ch :: lex.unget_stack
+let read_optional lex expected =
+  match read lex with
+  | Some c -> if c = expected then true else (unget lex c; false)
+  | None -> false
 
 let is_digit ch =
   '0' <= ch && ch <= '9'
@@ -85,11 +90,6 @@ let handle_alphabetic lex first =
     else
       None
   with ReturnImmediate -> None
-
-let read_optional lex expected =
-  match read lex with
-  | Some c -> if c = expected then true else (unget lex c; false)
-  | None -> false
 
 let handle_symbol lex first =
   match first with
