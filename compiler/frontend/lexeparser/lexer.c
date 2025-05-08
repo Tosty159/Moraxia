@@ -212,8 +212,47 @@ Token next_token(Lexer *lexer) {
             if (is_keyword(name)) {
                 type = TOKEN_KEYWORD;
             }
-
+            
             return (Token){type, name, lexer->line, lexer->column};
+        }
+
+        if (ch == '"') {
+            lexer_advance(lexer); // Skip the opening quote
+
+            size_t size = INITIAL_BUFFER_SIZE;
+            char *str = (char *)malloc(size);
+            if (!str) {
+                perror("Failed to allocate memory for string");
+                exit(EXIT_FAILURE);
+            }
+
+            size_t count = 0;
+            while (lexer->current_char != '"') {
+                if (lexer->is_over) {
+                    fprintf(stderr, "Error: String literal not terminated: '\"%s', line: %lu, pos: %lu\n",
+                        str, lexer->line, lexer->column);
+                    free(str);
+                    exit(EXIT_FAILURE);
+                }
+
+                if (count >= size - 1) {
+                    size *= 2;
+                    char *temp = (char *)realloc(str, size);
+                    if (!temp) {
+                        perror("Failed to reallocate memory for string");
+                        free(str);
+                        exit(EXIT_FAILURE);
+                    }
+                    str = temp;
+                }
+
+                str[count++] = lexer->current_char;
+                lexer_advance(lexer);
+            }
+            str[count] = '\0';
+            lexer_advance(lexer); // Skip the closing quote
+
+            return (Token){TOKEN_STRING, str, lexer->line, lexer->column};
         }
     }
 }
