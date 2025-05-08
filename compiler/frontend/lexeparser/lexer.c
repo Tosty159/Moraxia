@@ -216,6 +216,36 @@ Token next_token(Lexer *lexer) {
             return (Token){type, name, lexer->line, lexer->column};
         }
 
+        if (ch == '\'') {
+            lexer_advance(lexer); // Skip the opening quote
+
+            char *char_literal = (char *)malloc(3);
+            if (!char_literal) {
+                perror("Failed to allocate memory for char literal");
+                exit(EXIT_FAILURE);
+            }
+
+            int count = 0;
+            if (lexer->current_char == '\\') {
+                char_literal[count++] = '\\';
+                lexer_advance(lexer);
+            }
+            char_literal[count++] = lexer->current_char;
+            lexer_advance(lexer);
+
+            if (lexer->current_char != '\'') {
+                fprintf(stderr, "Error: Invalid character literal: '%s', line: %lu, pos: %lu\n",
+                    char_literal, lexer->line, lexer->column);
+                free(char_literal);
+                exit(EXIT_FAILURE);
+            }
+
+            char_literal[count] = '\0';
+            lexer_advance(lexer); // Skip the closing quote
+
+            return (Token){TOKEN_CHAR, char_literal, lexer->line, lexer->column};
+        }
+
         if (ch == '"') {
             lexer_advance(lexer); // Skip the opening quote
 
