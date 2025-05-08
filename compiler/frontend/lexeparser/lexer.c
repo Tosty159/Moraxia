@@ -358,7 +358,7 @@ Token next_token(Lexer *lexer) {
             punct[0] = ch;
             punct[1] = '\0';
             lexer_advance(lexer);
-            
+
             return (Token){TOKEN_PUNCTUATION, punct, lexer->line, lexer->column};
         }
 
@@ -366,5 +366,26 @@ Token next_token(Lexer *lexer) {
             lexer_advance(lexer);
             return (Token){TOKEN_SEMICOLON, NULL, lexer->line, lexer->column};
         }
+
+        int len = snprintf(NULL, 0, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
+            ch, lexer->line, lexer->column);
+
+        if (len < 0) {
+            perror("Failed to format error message");
+            exit(EXIT_FAILURE);
+        }
+
+        char *error_msg = (char *)malloc(len + 1);
+        if (!error_msg) {
+            perror("Failed to allocate memory for error message");
+            exit(EXIT_FAILURE);
+        }
+
+        snprintf(error_msg, len + 1, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
+            ch, lexer->line, lexer->column);
+        
+        lexer_advance(lexer); // Skip the unknown character
+        return (Token){TOKEN_ERROR, error_msg, lexer->line, lexer->column};
     }
+    return (Token){TOKEN_EOF, NULL, lexer->line, lexer->column};
 }
