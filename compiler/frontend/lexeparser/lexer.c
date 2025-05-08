@@ -119,6 +119,54 @@ int is_keyword(const char *str) {
     return 0;
 }
 
+int could_contain(char *set[], size_t size, char *elem) {
+    for (size_t i = 0; i < size; i++) {
+        if (strstr(set[i], elem) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+char *is_operator(Lexer *lexer) {
+    char *all_ops[38] = {
+        "=", ":=", "+=", "-=", "*=", "/=", "%=", "//=", "**=",
+        ":", "->", "+", "-", "*", "/", "%", "//", "**", "&&",
+        "||", "^^", "!", "==", "!=", "<", "<=", ">=", ">", "~",
+        "(", ")", "[", "]", "{", "}", ".", "..", "...",
+    };
+
+    char *buff = (char *)malloc(4);
+    char *last_op = (char *)malloc(4);
+    if (!buff || !last_op) {
+        perror("Failed to allocate memory for operator");
+        exit(EXIT_FAILURE);
+    }
+
+    // Make sure it is the start of an operator
+    buff[0] = lexer->current_char;
+    if (!could_contain(all_ops, 38, buff)) {
+        free(buff);
+        free(last_op);
+        return NULL;
+    }
+    lexer_advance(lexer);
+
+    int count = 1;
+    while (!lexer->is_over) {
+        buff[count++] = lexer->current_char;
+        if (!could_contain(all_ops, 38, buff)) {
+            break;
+        }
+
+        strcpy(last_op, buff);
+        lexer_advance(lexer);
+    }
+    last_op[count] = '\0';
+
+    return last_op;
+}
+
 Token next_token(Lexer *lexer) {
     skip_whitespace(lexer);
     skip_comments(lexer);
@@ -285,6 +333,11 @@ Token next_token(Lexer *lexer) {
             lexer_advance(lexer); // Skip the closing quote
 
             return (Token){TOKEN_STRING, str, lexer->line, lexer->column};
+        }
+
+        char *op = is_operator(lexer);
+        if (op) {
+            return (Token){TOKEN_OPERATOR, op, lexer->line, lexer->column};
         }
     }
 }
