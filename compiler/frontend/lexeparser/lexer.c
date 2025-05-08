@@ -150,6 +150,7 @@ char *is_operator(Lexer *lexer) {
         free(last_op);
         return NULL;
     }
+    strcpy(last_op, buff);
     lexer_advance(lexer);
 
     int count = 1;
