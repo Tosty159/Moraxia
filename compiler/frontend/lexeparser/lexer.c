@@ -211,6 +211,8 @@ Token next_token(Lexer *lexer) {
             TokenType type = TOKEN_IDENTIFIER;
             if (is_keyword(name)) {
                 type = TOKEN_KEYWORD;
+            } else if (strcmp(name, "true") == 0 || strcmp(name, "false") == 0) {
+                type = TOKEN_BOOL;
             }
             
             return (Token){type, name, lexer->line, lexer->column};
