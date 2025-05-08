@@ -111,7 +111,7 @@ int is_keyword(const char *str) {
         "let", "fun", "if", "else", "while", "for", "return",
     };
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         if (strcmp(str, keywords[i]) == 0) {
             return 1;
         }
@@ -213,7 +213,6 @@ Token next_token(Lexer *lexer) {
                     exit(EXIT_FAILURE);
                 }
                 result_num = temp;
-                free(temp);
             }
             result_num[count++] = lexer->current_char;
 
