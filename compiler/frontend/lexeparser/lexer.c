@@ -106,6 +106,19 @@ void skip_comments(Lexer *lexer) {
     }
 }
 
+int is_keyword(const char *str) {
+    char *keywords[7] = {
+        "let", "fun", "if", "else", "while", "for", "return",
+    };
+
+    for (int i = 0; i < 6; i++) {
+        if (strcmp(str, keywords[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 Token next_token(Lexer *lexer) {
     skip_whitespace(lexer);
     skip_comments(lexer);
@@ -195,7 +208,12 @@ Token next_token(Lexer *lexer) {
             }
             name[count] = '\0';
 
-            return (Token){TOKEN_IDENTIFIER, name, lexer->line, lexer->column};
+            TokenType type = TOKEN_IDENTIFIER;
+            if (is_keyword(name)) {
+                type = TOKEN_KEYWORD;
+            }
+
+            return (Token){type, name, lexer->line, lexer->column};
         }
     }
 }
