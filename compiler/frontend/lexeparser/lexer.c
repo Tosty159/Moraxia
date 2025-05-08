@@ -121,7 +121,7 @@ int is_keyword(const char *str) {
 
 int could_contain(char *set[], size_t size, char *elem) {
     for (size_t i = 0; i < size; i++) {
-        if (strstr(set[i], elem) == 0) {
+        if (strstr(set[i], elem) != NULL) {
             return 1;
         }
     }
