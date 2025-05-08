@@ -165,5 +165,37 @@ Token next_token(Lexer *lexer) {
 
             return (Token){TOKEN_INT, result_num, lexer->line, lexer->column};
         }
+
+        if (isalpha(ch) || ch == '_') {
+            size_t size = INITIAL_BUFFER_SIZE;
+            char *name = (char *)malloc(size);
+            if (!name) {
+                perror("Failed to allocate memory for identifier");
+                exit(EXIT_FAILURE);
+            }
+
+            name[0] = ch;
+            lexer_advance(lexer);
+
+            size_t count = 1;
+            while (isalnum(lexer->current_char) || lexer->current_char == '_') {
+                if (count >= size - 1) {
+                    size *= 2;
+                    char *temp = (char *)realloc(name, size);
+                    if (!temp) {
+                        perror("Failed to reallocate memory for identifier");
+                        free(name);
+                        exit(EXIT_FAILURE);
+                    }
+                    name = temp;
+                }
+
+                name[count++] = lexer->current_char;
+                lexer_advance(lexer);
+            }
+            name[count] = '\0';
+
+            return (Token){TOKEN_IDENTIFIER, name, lexer->line, lexer->column};
+        }
     }
 }
