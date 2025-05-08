@@ -167,6 +167,14 @@ char *is_operator(Lexer *lexer) {
     return last_op;
 }
 
+int is_punct(char ch) {
+    // TODO: Make the comma an operator, no puncts needed it seems
+    if (ch == ',') { // Single sad punctuation :C
+        return 1;
+    }
+    return 0;
+}
+
 Token next_token(Lexer *lexer) {
     skip_whitespace(lexer);
     skip_comments(lexer);
@@ -338,6 +346,20 @@ Token next_token(Lexer *lexer) {
         char *op = is_operator(lexer);
         if (op) {
             return (Token){TOKEN_OPERATOR, op, lexer->line, lexer->column};
+        }
+
+        if (is_punct(ch)) {
+            char *punct = (char *)malloc(2);
+            if (!punct) {
+                perror("Failed to allocate memory for punctuation");
+                exit(EXIT_FAILURE);
+            }
+
+            punct[0] = ch;
+            punct[1] = '\0';
+            lexer_advance(lexer);
+            
+            return (Token){TOKEN_PUNCTUATION, punct, lexer->line, lexer->column};
         }
 
         if (ch == ';') {
