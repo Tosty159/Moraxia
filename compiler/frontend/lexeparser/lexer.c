@@ -183,209 +183,206 @@ Token next_token(Lexer *lexer) {
         return (Token){TOKEN_EOF, NULL, lexer->line, lexer->column};
     }
 
-    while (lexer->current_char != '\0') {
-        char ch = lexer->current_char;
+    char ch = lexer->current_char;
 
-        if (isdigit(ch)) {
-            size_t size = INITIAL_BUFFER_SIZE;
-            char *result_num = (char *)malloc(size);
-            if (!result_num) {
-                perror("Failed to allocate memory for number");
-                exit(EXIT_FAILURE);
-            }
-
-            result_num[0] = ch;
-            lexer_advance(lexer);
-
-            int is_int = 1; // Assume it's an integer first
-
-            size_t count = 1;
-            while (!lexer->is_over) {
-                if (!(isdigit(lexer->current_char) || lexer->current_char == '.')) {
-                    break;
-                }
-
-                if (count >= size - 1) {
-                    size *= 2;
-                    char *temp = (char *)realloc(result_num, size);
-                    if (!temp) {
-                        perror("Failed to reallocate memory for number");
-                        free(result_num);
-                        exit(EXIT_FAILURE);
-                    }
-                    result_num = temp;
-                    free(temp);
-                }
-                result_num[count++] = lexer->current_char;
-
-                if (lexer->current_char == '.') {
-                    if (!is_int) {
-                        fprintf(stderr, "Error: Multiple decimal points in number: '%s.', line: %lu, pos: %lu\n",
-                            result_num, lexer->line, lexer->column);
-                        free(result_num);
-                        exit(EXIT_FAILURE);
-                    }
-                    is_int = 0; // It's a float
-                }
-
-                lexer_advance(lexer);
-            }
-            result_num[count] = '\0';
-
-            return (Token){TOKEN_INT, result_num, lexer->line, lexer->column};
+    if (isdigit(ch)) {
+        size_t size = INITIAL_BUFFER_SIZE;
+        char *result_num = (char *)malloc(size);
+        if (!result_num) {
+            perror("Failed to allocate memory for number");
+            exit(EXIT_FAILURE);
         }
 
-        if (isalpha(ch) || ch == '_') {
-            size_t size = INITIAL_BUFFER_SIZE;
-            char *name = (char *)malloc(size);
-            if (!name) {
-                perror("Failed to allocate memory for identifier");
-                exit(EXIT_FAILURE);
+        result_num[0] = ch;
+        lexer_advance(lexer);
+
+        int is_int = 1; // Assume it's an integer first
+
+        size_t count = 1;
+        while (!lexer->is_over) {
+            if (!(isdigit(lexer->current_char) || lexer->current_char == '.')) {
+                break;
             }
 
-            name[0] = ch;
-            lexer_advance(lexer);
-
-            size_t count = 1;
-            while (isalnum(lexer->current_char) || lexer->current_char == '_') {
-                if (count >= size - 1) {
-                    size *= 2;
-                    char *temp = (char *)realloc(name, size);
-                    if (!temp) {
-                        perror("Failed to reallocate memory for identifier");
-                        free(name);
-                        exit(EXIT_FAILURE);
-                    }
-                    name = temp;
+            if (count >= size - 1) {
+                size *= 2;
+                char *temp = (char *)realloc(result_num, size);
+                if (!temp) {
+                    perror("Failed to reallocate memory for number");
+                    free(result_num);
+                    exit(EXIT_FAILURE);
                 }
-
-                name[count++] = lexer->current_char;
-                lexer_advance(lexer);
+                result_num = temp;
+                free(temp);
             }
-            name[count] = '\0';
+            result_num[count++] = lexer->current_char;
 
-            TokenType type = TOKEN_IDENTIFIER;
-            if (is_keyword(name)) {
-                type = TOKEN_KEYWORD;
-            } else if (strcmp(name, "true") == 0 || strcmp(name, "false") == 0) {
-                type = TOKEN_BOOL;
-            }
-            
-            return (Token){type, name, lexer->line, lexer->column};
-        }
-
-        if (ch == '\'') {
-            lexer_advance(lexer); // Skip the opening quote
-
-            char *char_literal = (char *)malloc(3);
-            if (!char_literal) {
-                perror("Failed to allocate memory for char literal");
-                exit(EXIT_FAILURE);
+            if (lexer->current_char == '.') {
+                if (!is_int) {
+                    fprintf(stderr, "Error: Multiple decimal points in number: '%s.', line: %lu, pos: %lu\n",
+                        result_num, lexer->line, lexer->column);
+                    free(result_num);
+                    exit(EXIT_FAILURE);
+                }
+                is_int = 0; // It's a float
             }
 
-            int count = 0;
-            if (lexer->current_char == '\\') {
-                char_literal[count++] = '\\';
-                lexer_advance(lexer);
-            }
-            char_literal[count++] = lexer->current_char;
             lexer_advance(lexer);
+        }
+        result_num[count] = '\0';
 
-            if (lexer->current_char != '\'') {
-                fprintf(stderr, "Error: Invalid character literal: '%s', line: %lu, pos: %lu\n",
-                    char_literal, lexer->line, lexer->column);
-                free(char_literal);
-                exit(EXIT_FAILURE);
-            }
+        return (Token){TOKEN_INT, result_num, lexer->line, lexer->column};
+    }
 
-            char_literal[count] = '\0';
-            lexer_advance(lexer); // Skip the closing quote
-
-            return (Token){TOKEN_CHAR, char_literal, lexer->line, lexer->column};
+    if (isalpha(ch) || ch == '_') {
+        size_t size = INITIAL_BUFFER_SIZE;
+        char *name = (char *)malloc(size);
+        if (!name) {
+            perror("Failed to allocate memory for identifier");
+            exit(EXIT_FAILURE);
         }
 
-        if (ch == '"') {
-            lexer_advance(lexer); // Skip the opening quote
+        name[0] = ch;
+        lexer_advance(lexer);
 
-            size_t size = INITIAL_BUFFER_SIZE;
-            char *str = (char *)malloc(size);
-            if (!str) {
-                perror("Failed to allocate memory for string");
+        size_t count = 1;
+        while (isalnum(lexer->current_char) || lexer->current_char == '_') {
+            if (count >= size - 1) {
+                size *= 2;
+                char *temp = (char *)realloc(name, size);
+                if (!temp) {
+                    perror("Failed to reallocate memory for identifier");
+                    free(name);
+                    exit(EXIT_FAILURE);
+                }
+                name = temp;
+            }
+
+            name[count++] = lexer->current_char;
+            lexer_advance(lexer);
+        }
+        name[count] = '\0';
+
+        TokenType type = TOKEN_IDENTIFIER;
+        if (is_keyword(name)) {
+            type = TOKEN_KEYWORD;
+        } else if (strcmp(name, "true") == 0 || strcmp(name, "false") == 0) {
+            type = TOKEN_BOOL;
+        }
+        
+        return (Token){type, name, lexer->line, lexer->column};
+    }
+
+    if (ch == '\'') {
+        lexer_advance(lexer); // Skip the opening quote
+
+        char *char_literal = (char *)malloc(3);
+        if (!char_literal) {
+            perror("Failed to allocate memory for char literal");
+            exit(EXIT_FAILURE);
+        }
+
+        int count = 0;
+        if (lexer->current_char == '\\') {
+            char_literal[count++] = '\\';
+            lexer_advance(lexer);
+        }
+        char_literal[count++] = lexer->current_char;
+        lexer_advance(lexer);
+
+        if (lexer->current_char != '\'') {
+            fprintf(stderr, "Error: Invalid character literal: '%s', line: %lu, pos: %lu\n",
+                char_literal, lexer->line, lexer->column);
+            free(char_literal);
+            exit(EXIT_FAILURE);
+        }
+
+        char_literal[count] = '\0';
+        lexer_advance(lexer); // Skip the closing quote
+
+        return (Token){TOKEN_CHAR, char_literal, lexer->line, lexer->column};
+    }
+
+    if (ch == '"') {
+        lexer_advance(lexer); // Skip the opening quote
+
+        size_t size = INITIAL_BUFFER_SIZE;
+        char *str = (char *)malloc(size);
+        if (!str) {
+            perror("Failed to allocate memory for string");
+            exit(EXIT_FAILURE);
+        }
+
+        size_t count = 0;
+        while (lexer->current_char != '"') {
+            if (lexer->is_over) {
+                fprintf(stderr, "Error: String literal not terminated: '\"%s', line: %lu, pos: %lu\n",
+                    str, lexer->line, lexer->column);
+                free(str);
                 exit(EXIT_FAILURE);
             }
 
-            size_t count = 0;
-            while (lexer->current_char != '"') {
-                if (lexer->is_over) {
-                    fprintf(stderr, "Error: String literal not terminated: '\"%s', line: %lu, pos: %lu\n",
-                        str, lexer->line, lexer->column);
+            if (count >= size - 1) {
+                size *= 2;
+                char *temp = (char *)realloc(str, size);
+                if (!temp) {
+                    perror("Failed to reallocate memory for string");
                     free(str);
                     exit(EXIT_FAILURE);
                 }
-
-                if (count >= size - 1) {
-                    size *= 2;
-                    char *temp = (char *)realloc(str, size);
-                    if (!temp) {
-                        perror("Failed to reallocate memory for string");
-                        free(str);
-                        exit(EXIT_FAILURE);
-                    }
-                    str = temp;
-                }
-
-                str[count++] = lexer->current_char;
-                lexer_advance(lexer);
-            }
-            str[count] = '\0';
-            lexer_advance(lexer); // Skip the closing quote
-
-            return (Token){TOKEN_STRING, str, lexer->line, lexer->column};
-        }
-
-        char *op = is_operator(lexer);
-        if (op) {
-            return (Token){TOKEN_OPERATOR, op, lexer->line, lexer->column};
-        }
-
-        if (is_punct(ch)) {
-            char *punct = (char *)malloc(2);
-            if (!punct) {
-                perror("Failed to allocate memory for punctuation");
-                exit(EXIT_FAILURE);
+                str = temp;
             }
 
-            punct[0] = ch;
-            punct[1] = '\0';
+            str[count++] = lexer->current_char;
             lexer_advance(lexer);
-
-            return (Token){TOKEN_PUNCTUATION, punct, lexer->line, lexer->column};
         }
+        str[count] = '\0';
+        lexer_advance(lexer); // Skip the closing quote
 
-        if (ch == ';') {
-            lexer_advance(lexer);
-            return (Token){TOKEN_SEMICOLON, NULL, lexer->line, lexer->column};
-        }
-
-        int len = snprintf(NULL, 0, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
-            ch, lexer->line, lexer->column);
-
-        if (len < 0) {
-            perror("Failed to format error message");
-            exit(EXIT_FAILURE);
-        }
-
-        char *error_msg = (char *)malloc(len + 1);
-        if (!error_msg) {
-            perror("Failed to allocate memory for error message");
-            exit(EXIT_FAILURE);
-        }
-
-        snprintf(error_msg, len + 1, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
-            ch, lexer->line, lexer->column);
-        
-        lexer_advance(lexer); // Skip the unknown character
-        return (Token){TOKEN_ERROR, error_msg, lexer->line, lexer->column};
+        return (Token){TOKEN_STRING, str, lexer->line, lexer->column};
     }
-    return (Token){TOKEN_EOF, NULL, lexer->line, lexer->column};
+
+    char *op = is_operator(lexer);
+    if (op) {
+        return (Token){TOKEN_OPERATOR, op, lexer->line, lexer->column};
+    }
+
+    if (is_punct(ch)) {
+        char *punct = (char *)malloc(2);
+        if (!punct) {
+            perror("Failed to allocate memory for punctuation");
+            exit(EXIT_FAILURE);
+        }
+
+        punct[0] = ch;
+        punct[1] = '\0';
+        lexer_advance(lexer);
+
+        return (Token){TOKEN_PUNCTUATION, punct, lexer->line, lexer->column};
+    }
+
+    if (ch == ';') {
+        lexer_advance(lexer);
+        return (Token){TOKEN_SEMICOLON, NULL, lexer->line, lexer->column};
+    }
+
+    int len = snprintf(NULL, 0, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
+        ch, lexer->line, lexer->column);
+
+    if (len < 0) {
+        perror("Failed to format error message");
+        exit(EXIT_FAILURE);
+    }
+
+    char *error_msg = (char *)malloc(len + 1);
+    if (!error_msg) {
+        perror("Failed to allocate memory for error message");
+        exit(EXIT_FAILURE);
+    }
+
+    snprintf(error_msg, len + 1, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
+        ch, lexer->line, lexer->column);
+    
+    lexer_advance(lexer); // Skip the unknown character
+    return (Token){TOKEN_ERROR, error_msg, lexer->line, lexer->column};
 }
