@@ -10,6 +10,7 @@ typedef struct Lexer {
     char current_char;
     unsigned long line;
     unsigned long column;
+    int is_over;
 } Lexer;
 
 Lexer *lexer_create(FILE *stream);
