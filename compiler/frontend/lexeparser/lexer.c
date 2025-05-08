@@ -180,10 +180,12 @@ Token next_token(Lexer *lexer) {
     skip_comments(lexer);
 
     if (lexer->is_over) {
-        return (Token){TOKEN_EOF, NULL, lexer->line, lexer->column};
+        return (Token){TOKEN_EOF, NULL, 0, 0}; // Line and column are not relevant for EOF
     }
 
     char ch = lexer->current_char;
+    unsigned long line = lexer->line;
+    unsigned long column = lexer->column;
 
     if (isdigit(ch)) {
         size_t size = INITIAL_BUFFER_SIZE;
@@ -219,7 +221,7 @@ Token next_token(Lexer *lexer) {
             if (lexer->current_char == '.') {
                 if (!is_int) {
                     fprintf(stderr, "Error: Multiple decimal points in number: '%s.', line: %lu, pos: %lu\n",
-                        result_num, lexer->line, lexer->column);
+                        result_num, line, column);
                     free(result_num);
                     exit(EXIT_FAILURE);
                 }
@@ -230,7 +232,7 @@ Token next_token(Lexer *lexer) {
         }
         result_num[count] = '\0';
 
-        return (Token){TOKEN_INT, result_num, lexer->line, lexer->column};
+        return (Token){TOKEN_INT, result_num, line, column};
     }
 
     if (isalpha(ch) || ch == '_') {
@@ -269,7 +271,7 @@ Token next_token(Lexer *lexer) {
             type = TOKEN_BOOL;
         }
         
-        return (Token){type, name, lexer->line, lexer->column};
+        return (Token){type, name, line, column};
     }
 
     if (ch == '\'') {
@@ -291,7 +293,7 @@ Token next_token(Lexer *lexer) {
 
         if (lexer->current_char != '\'') {
             fprintf(stderr, "Error: Invalid character literal: '%s', line: %lu, pos: %lu\n",
-                char_literal, lexer->line, lexer->column);
+                char_literal, line, column);
             free(char_literal);
             exit(EXIT_FAILURE);
         }
@@ -299,7 +301,7 @@ Token next_token(Lexer *lexer) {
         char_literal[count] = '\0';
         lexer_advance(lexer); // Skip the closing quote
 
-        return (Token){TOKEN_CHAR, char_literal, lexer->line, lexer->column};
+        return (Token){TOKEN_CHAR, char_literal, line, column};
     }
 
     if (ch == '"') {
@@ -316,7 +318,7 @@ Token next_token(Lexer *lexer) {
         while (lexer->current_char != '"') {
             if (lexer->is_over) {
                 fprintf(stderr, "Error: String literal not terminated: '\"%s', line: %lu, pos: %lu\n",
-                    str, lexer->line, lexer->column);
+                    str, line, column);
                 free(str);
                 exit(EXIT_FAILURE);
             }
@@ -338,12 +340,12 @@ Token next_token(Lexer *lexer) {
         str[count] = '\0';
         lexer_advance(lexer); // Skip the closing quote
 
-        return (Token){TOKEN_STRING, str, lexer->line, lexer->column};
+        return (Token){TOKEN_STRING, str, line, column};
     }
 
     char *op = is_operator(lexer);
     if (op) {
-        return (Token){TOKEN_OPERATOR, op, lexer->line, lexer->column};
+        return (Token){TOKEN_OPERATOR, op, line, column};
     }
 
     if (is_punct(ch)) {
@@ -357,16 +359,16 @@ Token next_token(Lexer *lexer) {
         punct[1] = '\0';
         lexer_advance(lexer);
 
-        return (Token){TOKEN_PUNCTUATION, punct, lexer->line, lexer->column};
+        return (Token){TOKEN_PUNCTUATION, punct, line, column};
     }
 
     if (ch == ';') {
         lexer_advance(lexer);
-        return (Token){TOKEN_SEMICOLON, NULL, lexer->line, lexer->column};
+        return (Token){TOKEN_SEMICOLON, NULL, line, column};
     }
 
     int len = snprintf(NULL, 0, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
-        ch, lexer->line, lexer->column);
+        ch, line, column);
 
     if (len < 0) {
         perror("Failed to format error message");
@@ -380,8 +382,8 @@ Token next_token(Lexer *lexer) {
     }
 
     snprintf(error_msg, len + 1, "Error: Unknown character: '%c', line: %lu, pos: %lu\n",
-        ch, lexer->line, lexer->column);
+        ch, line, column);
     
     lexer_advance(lexer); // Skip the unknown character
-    return (Token){TOKEN_ERROR, error_msg, lexer->line, lexer->column};
+    return (Token){TOKEN_ERROR, error_msg, line, column};
 }
