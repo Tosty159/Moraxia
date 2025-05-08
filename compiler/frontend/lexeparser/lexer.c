@@ -339,5 +339,10 @@ Token next_token(Lexer *lexer) {
         if (op) {
             return (Token){TOKEN_OPERATOR, op, lexer->line, lexer->column};
         }
+
+        if (ch == ';') {
+            lexer_advance(lexer);
+            return (Token){TOKEN_SEMICOLON, NULL, lexer->line, lexer->column};
+        }
     }
 }
